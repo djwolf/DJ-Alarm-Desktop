@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,12 +10,11 @@ import java.awt.Toolkit;
 import java.io.File;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import java.net.URL;
-import java.net.URLDecoder;
 
 /**
  * Created by djwolf on 9/30/2016.
- */
+**/
+
 public class DJAlarm {
     private javax.swing.JPanel JPanel;
     private JCheckBox alarmOnCheckBox;
@@ -43,7 +41,6 @@ public class DJAlarm {
                 alarmDialog.setVisible(true);
             }
         });
-
         //set application icon
         Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("res/UoZJe3T.png"));
         ImageIcon icon = new ImageIcon(image);
@@ -81,14 +78,14 @@ public class DJAlarm {
                             isAM = false;
                         if ((curHour == getAlarmHour()) && (curMinute == getAlarmMinute()) && (isAM == AM))
                         {
-                            System.out.println("ALARM OFF!!!!!");
                             Thread audioLoop = new Thread()
                             {
+                                private boolean running = true;
                                 public void run()
                                 {
                                     File path = new File(getAudioPath());
                                     Clip clip = null;
-                                    while (true)
+                                    while (running)
                                     {
                                         try
                                         {
@@ -98,6 +95,7 @@ public class DJAlarm {
                                             Thread.sleep((long)(clip.getMicrosecondLength() * 0.001));
                                         } catch (Exception e)
                                         {
+                                            running = false;
                                             System.out.println(e);
                                         }
                                     }
@@ -106,6 +104,10 @@ public class DJAlarm {
                             audioLoop.start();
                             alarmOnCheckBox.setSelected(false);
                             alarmStateChange();
+                            AlarmStop stopAlarm = new AlarmStop(audioLoop);
+                            stopAlarm.setLocationRelativeTo(JPanel);
+                            stopAlarm.pack();
+                            stopAlarm.setVisible(true);
                         }
                     }
                     try {
@@ -146,6 +148,7 @@ public class DJAlarm {
     }
 
     public void alarmStateChange() {alarmON = alarmOnCheckBox.isSelected();}
+
     //set method
     public static void setAlarmHour(int h) {alarmHour = h;}
 
