@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.lang.Thread;
@@ -21,6 +23,7 @@ public class DJAlarm {
     private JButton setAlarmButton;
     private JButton setTrackButton;
     private JLabel Time;
+    private JButton SettingsButton;
     private static JFrame frame = new JFrame("DJAlarm");
     private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
     private SimpleDateFormat getHour = new SimpleDateFormat("HH");
@@ -31,8 +34,8 @@ public class DJAlarm {
     private static boolean alarmON;
     private static String audioPath = "";
 
-
     public DJAlarm() {
+
         DJAlarm DJA = this;
         setAlarmButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -68,7 +71,6 @@ public class DJAlarm {
                     }
                     Time.setText(curHour + ":" + curMinuteSTR + " " + amPM + "M");
 
-                    //is the alarm supposed to go off here?
                     if (alarmON)
                     {
                         boolean isAM;
@@ -81,22 +83,65 @@ public class DJAlarm {
                             Thread audioLoop = new Thread()
                             {
                                 private boolean running = true;
+                                private boolean defaultAudio = true;
+                                private File path;
                                 public void run()
                                 {
-                                    File path = new File(getAudioPath());
-                                    Clip clip = null;
+                                    if (!(getAudioPath().equals("")))
+                                    {
+                                        String quickPath = getAudioPath();
+                                        if (getAudioPath().substring(0,4).equals("file"))
+                                        {
+                                            quickPath = getAudioPath().substring(5);
+                                        }
+                                        path = new File(quickPath);
+                                        if (path.exists())
+                                        {
+                                            defaultAudio = false;
+                                        }
+                                    }
+                                    Clip clip= null;
                                     while (running)
                                     {
+                                        InputStream defaultAudioStream = getClass().getResourceAsStream("res/Triangle Dinner Bell Sound Effect small.wav");
+                                        InputStream bufferedStream = new BufferedInputStream(defaultAudioStream);
                                         try
                                         {
                                             clip = AudioSystem.getClip();
-                                            clip.open(AudioSystem.getAudioInputStream(path));
+                                            if (defaultAudio)
+                                            {
+                                                clip.open(AudioSystem.getAudioInputStream(bufferedStream));
+                                            } else {
+                                                clip.open(AudioSystem.getAudioInputStream(path));
+                                            }
                                             clip.start();
                                             Thread.sleep((long)(clip.getMicrosecondLength() * 0.001));
+                                            Thread.sleep(500);
+                                        } catch (InterruptedException e)
+                                        {
+                                            clip.stop();
+                                            running = false;
                                         } catch (Exception e)
                                         {
                                             running = false;
-                                            System.out.println(e);
+                                        } finally
+                                        {
+                                            try {
+                                                //drain streams
+                                                defaultAudioStream.skip(defaultAudioStream.available());
+                                                bufferedStream.skip(bufferedStream.available());
+                                                //handle the clip
+                                                clip.stop();
+                                                clip.flush();
+                                                clip.close();
+                                                //close off all other streams
+                                                bufferedStream.close();
+                                                defaultAudioStream.close();
+                                                defaultAudioStream = null;
+                                                bufferedStream = null;
+                                                clip = null;
+                                                System.gc();
+                                            } catch (Exception e) {}
                                         }
                                     }
                                 }
@@ -143,6 +188,14 @@ public class DJAlarm {
 
                 if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION)
                     audioPath = chooser.getSelectedFile().toString();
+            }
+        });
+        SettingsButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Settings settingsDialog = new Settings();
+                settingsDialog.setLocationRelativeTo(JPanel);
+                settingsDialog.pack();
+                settingsDialog.setVisible(true);
             }
         });
     }

@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.lang.Thread;
 import java.lang.Math;
-import java.util.InputMismatchException;
+import java.util.prefs.Preferences;
 
 public class AlarmStop extends JDialog {
     private JPanel contentPane;
@@ -15,6 +15,17 @@ public class AlarmStop extends JDialog {
     private Thread audioLoop;
     private int firstValue;
     private int secondValue;
+    private Preferences prefs = Preferences.userRoot().node(this.getClass().getName());
+    private ActionListener mathConfirm = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            onOK(true);
+        }
+    };
+    private ActionListener passConfirm = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            onOK(false);
+        }
+    };
 
     public AlarmStop(Thread aLoop) {
         setContentPane(contentPane);
@@ -25,37 +36,9 @@ public class AlarmStop extends JDialog {
         setTitle("Stop Alarm");
         problemText.setText(firstValue + " + " + secondValue);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
-        /*
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
-        */
+        buttonOK.addActionListener(mathConfirm);
 
-        // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        /*
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                dispose();
-            }
-        });
-        */
-
-        // call onCancel() on ESCAPE
-        /*
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        */
     }
 
     private void generateValues()
@@ -64,37 +47,49 @@ public class AlarmStop extends JDialog {
         secondValue = (int)Math.floor(Math.random() * 51);
     }
 
-    private void onOK() {
-        int answer = -1;
-        try {
-            answer = Integer.parseInt(problemEntry.getText());
-        } catch (NumberFormatException e)
-        {
-            instructionText.setText("Please enter a numerical value");
-            instructionText.setForeground(Color.red);
-            return;
-        }
-        if (answer == (firstValue + secondValue))
-        {
-            audioLoop.interrupt();
-            dispose();
-        } else {
-            instructionText.setText("Wrong answer! Please try again");
-            instructionText.setForeground(Color.red);
+    private void onOK(boolean mode) {
+        if (mode)
+        { //math
+            int answer;
+            try {
+                answer = Integer.parseInt(problemEntry.getText());
+            } catch (NumberFormatException e)
+            {
+                instructionText.setText("Please enter a numerical value");
+                instructionText.setForeground(Color.red);
+                return;
+            }
+            if (answer == (firstValue + secondValue))
+            {
+                buttonOK.removeActionListener(mathConfirm);
+                if (!(Settings.prefs_getPass().equals("")))
+                {
+                    instructionText.setText("Please enter the password you have set");
+                    instructionText.setForeground(Color.black);
+                    buttonOK.addActionListener(passConfirm);
+                    problemText.setText("");
+                    problemEntry.setText("");
+                } else {
+                    stopAlarm();
+                }
+            } else {
+                instructionText.setText("Wrong answer! Please try again");
+                instructionText.setForeground(Color.red);
+            }
+        } else { //password
+            if (problemEntry.getText().equals(Settings.prefs_getPass()))
+            {
+                stopAlarm();
+            } else {
+                instructionText.setText("Wrong password!");
+                instructionText.setForeground(Color.red);
+            }
         }
     }
 
-    /*
-    private void onCancel() {
-        // add your code here if necessary
+    public void stopAlarm()
+    {
         dispose();
-    }
-    */
-
-    public static void main(String[] args) {
-        //AlarmStop dialog = new AlarmStop();
-        //dialog.pack();
-        //dialog.setVisible(true);
-        //System.exit(0);
+        audioLoop.interrupt();
     }
 }
