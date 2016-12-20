@@ -2,16 +2,14 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedInputStream;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.lang.Thread;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.io.File;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 
 /**
  * Created by djwolf on 9/30/2016.
@@ -35,7 +33,7 @@ public class DJAlarm {
     private static String audioPath = "";
 
     public DJAlarm() {
-
+        new javafx.embed.swing.JFXPanel(); //force jfx init
         DJAlarm DJA = this;
         setAlarmButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -85,65 +83,58 @@ public class DJAlarm {
                                 private boolean running = true;
                                 private boolean defaultAudio = true;
                                 private File path;
+                                private String defaultAudioPath = getClass().getResource("res/Triangle Dinner Bell Sound Effect small.wav").toString();
+                                Media mediaPath;
                                 public void run()
                                 {
                                     if (!(getAudioPath().equals("")))
-                                    {
+                                    { //file selected
+                                        System.out.println(getAudioPath());
+
                                         String quickPath = getAudioPath();
-                                        if (getAudioPath().substring(0,4).equals("file"))
+                                        if (quickPath.substring(0,4).equals("file"))
                                         {
-                                            quickPath = getAudioPath().substring(5);
+                                            quickPath = quickPath.substring(5);
                                         }
                                         path = new File(quickPath);
                                         if (path.exists())
                                         {
                                             defaultAudio = false;
+                                            mediaPath = new Media(path.toURI().toString());
                                         }
                                     }
-                                    Clip clip= null;
-                                    while (running)
-                                    {
-                                        InputStream defaultAudioStream = getClass().getResourceAsStream("res/Triangle Dinner Bell Sound Effect small.wav");
-                                        InputStream bufferedStream = new BufferedInputStream(defaultAudioStream);
+
+                                    if (defaultAudio) {mediaPath = new Media(defaultAudioPath);}
+                                    MediaPlayer audioStream = new MediaPlayer(mediaPath);
+                                    System.out.println("awaiting stream availability");
+                                    while (audioStream.getStatus().toString().equals("UNKNOWN")) {
                                         try
                                         {
-                                            clip = AudioSystem.getClip();
-                                            if (defaultAudio)
-                                            {
-                                                clip.open(AudioSystem.getAudioInputStream(bufferedStream));
-                                            } else {
-                                                clip.open(AudioSystem.getAudioInputStream(path));
-                                            }
-                                            clip.start();
-                                            Thread.sleep((long)(clip.getMicrosecondLength() * 0.001));
-                                            Thread.sleep(500);
+                                            System.out.println("stream currently unavailable");
+                                            Thread.sleep(1000);
+                                        } catch (Exception e)
+                                        {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    System.out.println("Stream is ready");
+                                    while (running)
+                                    {
+                                        try
+                                        {
+                                            audioStream.play();
+                                            Thread.sleep((long)audioStream.getTotalDuration().toMillis());
                                         } catch (InterruptedException e)
                                         {
-                                            clip.stop();
+                                            audioStream.stop();
                                             running = false;
                                         } catch (Exception e)
                                         {
                                             running = false;
-                                        } finally
-                                        {
-                                            try {
-                                                //drain streams
-                                                defaultAudioStream.skip(defaultAudioStream.available());
-                                                bufferedStream.skip(bufferedStream.available());
-                                                //handle the clip
-                                                clip.stop();
-                                                clip.flush();
-                                                clip.close();
-                                                //close off all other streams
-                                                bufferedStream.close();
-                                                defaultAudioStream.close();
-                                                defaultAudioStream = null;
-                                                bufferedStream = null;
-                                                clip = null;
-                                                System.gc();
-                                            } catch (Exception e) {}
                                         }
+                                        audioStream.stop();
                                     }
+                                    audioStream.dispose();
                                 }
                             };
                             audioLoop.start();
@@ -181,7 +172,7 @@ public class DJAlarm {
         setTrackButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 JFileChooser chooser = new JFileChooser();
-                chooser.setFileFilter(new FileNameExtensionFilter(".wav files", "wav"));
+                chooser.setFileFilter(new FileNameExtensionFilter(".wav, .mp3 files", "wav", "mp3"));
                 chooser.setCurrentDirectory(new java.io.File("."));
                 chooser.setDialogTitle("Select Alarm Audio");
                 chooser.setAcceptAllFileFilterUsed(false);
@@ -202,7 +193,7 @@ public class DJAlarm {
 
     public void alarmStateChange() {alarmON = alarmOnCheckBox.isSelected();}
 
-    //set method
+    //set methods
     public static void setAlarmHour(int h) {alarmHour = h;}
 
     public static void setAlarmMinute(int m) {alarmMinute = m;}
@@ -226,4 +217,5 @@ public class DJAlarm {
         frame.pack();
         frame.setVisible(true);
     }
+
 }
