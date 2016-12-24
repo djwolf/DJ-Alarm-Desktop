@@ -1,18 +1,24 @@
 package com.djsoft.djalarm;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.lang.Thread;
-import java.util.Arrays;
 
 public class DJA_MAIN extends AppCompatActivity {
     private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
     private SimpleDateFormat getHour = new SimpleDateFormat("HH");
     private SimpleDateFormat getMinute = new SimpleDateFormat("mm");
     private TextView timeText;
+    private Button setAlarmButton;
+    public static ToggleButton alOnOffButton;
     private String[] curTimeText;
 
     @Override
@@ -20,6 +26,14 @@ public class DJA_MAIN extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dja_main);
         timeText = (TextView) findViewById(R.id.timeText);
+        alOnOffButton = (ToggleButton) findViewById(R.id.alOnOffButton);
+        setAlarmButton = (Button) findViewById(R.id.setAlarmButton);
+        setAlarmButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                System.out.println("Running code");
+                startActivity(new Intent(v.getContext(), DJA_SET_ALARM.class));
+            }
+        });
         curTimeText = new String[]{"12", "00", "A"};
         DJA_MAIN_FUNC();
     }
@@ -40,6 +54,7 @@ public class DJA_MAIN extends AppCompatActivity {
             }
         });
     }
+
 
     public void DJA_MAIN_FUNC() {
         new Thread()

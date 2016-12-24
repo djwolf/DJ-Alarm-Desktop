@@ -17,12 +17,12 @@
         android:layout_below="@+id/timeText"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="144dp"
-        android:id="@+id/toggleButton" />
+        android:id="@+id/alOnOffButton" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1:01"
+        android:text="12:00 AM"
         android:textSize="70sp"
         android:id="@+id/timeText"
         android:layout_marginTop="51dp"
@@ -30,15 +30,15 @@
         android:layout_centerHorizontal="true" />
 
     <Button
-        android:text="Set Alarm"
+        android:text="@string/set_alarm"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/setAlarmButton"
-        android:layout_toLeftOf="@+id/toggleButton"
-        android:layout_toStartOf="@+id/toggleButton" />
+        android:layout_toLeftOf="@+id/alOnOffButton"
+        android:layout_toStartOf="@+id/alOnOffButton" />
 
     <Button
         android:text="Settings"
@@ -46,7 +46,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/setAlarmButton"
         android:id="@+id/settingsButton"
-        android:layout_toRightOf="@+id/toggleButton"
+        android:layout_toRightOf="@+id/alOnOffButton"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
